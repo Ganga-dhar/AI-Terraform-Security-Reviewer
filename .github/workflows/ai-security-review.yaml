@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - "**.tf"
+      - "**/*.tf"
   pull_request:
     paths:
-      - "**.tf"
+      - "**/*.tf"
 
 permissions:
   contents: read
