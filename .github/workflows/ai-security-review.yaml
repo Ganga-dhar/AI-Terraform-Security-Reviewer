@@ -1,6 +1,11 @@
 name: AI Terraform Security Review
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.tf"
   pull_request:
     paths:
       - "**.tf"
@@ -13,7 +18,8 @@ jobs:
 
   terraform-security:
     runs-on: ubuntu-latest
-
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
 
       - name: Checkout

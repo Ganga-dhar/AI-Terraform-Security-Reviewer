@@ -1,5 +1,4 @@
 openai
 python-dotenv
-
-#pytest
-#checkov
+pytest
+checkov
