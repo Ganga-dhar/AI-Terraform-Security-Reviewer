@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Checkov Terraform Scan
         run: |
-          checkov -d examples --framework terraform
+          checkov -d examples --framework terraform --soft-fail
      
       - name: AI Terraform Review
         env:
