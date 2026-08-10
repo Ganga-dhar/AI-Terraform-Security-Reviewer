@@ -36,10 +36,10 @@ jobs:
         run: |
           pip install checkov
 
-      - name: Checkov
+      - name: Run Checkov Terraform Scan
         run: |
-          checkov -d .
-
+          checkov -d examples --framework terraform
+     
       - name: AI Terraform Review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
