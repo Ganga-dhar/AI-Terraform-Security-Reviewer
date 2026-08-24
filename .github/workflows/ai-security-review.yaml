@@ -21,6 +21,7 @@ jobs:
     name: Terraform Security Review
 
     runs-on: ubuntu-latest
+    environment: DEV
 
     steps:
 
@@ -67,8 +68,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
-          aws-region: us-east-1
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
 
       # --------------------------------------------------
@@ -101,6 +102,6 @@ jobs:
 
       - name: AI Terraform Security Review
         env:
-          AWS_REGION: us-east-1
+          AWS_REGION: ap-south-1
         run: |
           python -m auditor.auditor examples/vulnerable.tf
