@@ -1,0 +1,77 @@
+import json
+from pathlib import Path
+
+from auditor.llm_client import create_client
+from auditor.parser import read_terraform_file
+
+
+def load_prompt() -> str:
+    prompt_path = Path("prompts/terraform_security.txt")
+
+    return prompt_path.read_text(encoding="utf-8")
+
+
+def audit_terraform(file_path: str):
+
+    terraform_code = read_terraform_file(file_path)
+    security_prompt = load_prompt()
+
+    client = create_client()
+
+    response = client.converse(
+        modelId="amazon.nova-lite-v1:0",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": (
+                            f"{security_prompt}\n\n"
+                            "Review the following Terraform code.\n\n"
+                            f"```terraform\n{terraform_code}\n```"
+                        )
+                    }
+                ],
+            }
+        ],
+        inferenceConfig={
+            "maxTokens": 2000,
+            "temperature": 0,
+        },
+    )
+
+    result = response["output"]["message"]["content"][0]["text"]
+
+    # Clean Markdown code fences
+    result = result.strip()
+
+    if result.startswith("```json"):
+        result = result[len("```json"):].strip()
+
+    if result.endswith("```"):
+        result = result[:-3].strip()
+
+    try:
+        return json.loads(result)
+
+    except json.JSONDecodeError:
+        return {
+            "status": "ERROR",
+            "raw_response": result,
+        }
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) != 2:
+        print(
+            "Usage: python -m auditor.auditor <terraform-file>"
+        )
+        sys.exit(1)
+
+    terraform_file = sys.argv[1]
+
+    result = audit_terraform(terraform_file)
+
+    print(json.dumps(result, indent=2))

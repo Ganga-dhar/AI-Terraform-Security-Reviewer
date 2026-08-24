@@ -1,4 +1,8 @@
-openai
-python-dotenv
-pytest
-checkov
+# openai
+# python-dotenv
+# pytest
+# checkov
+
+boto3>=1.40.0
+botocore>=1.40.0
+checkov>=2.0.0
