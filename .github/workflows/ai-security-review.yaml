@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   pull_request:
     branches:
       - main
@@ -11,37 +12,95 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  id-token: write
 
 jobs:
 
   terraform-security:
+
+    name: Terraform Security Review
+
     runs-on: ubuntu-latest
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
     steps:
+
+      # --------------------------------------------------
+      # 1. Checkout repository
+      # --------------------------------------------------
 
       - name: Checkout
         uses: actions/checkout@v7
+
+
+      # --------------------------------------------------
+      # 2. Setup Python
+      # --------------------------------------------------
 
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
+
+      # --------------------------------------------------
+      # 3. Upgrade pip
+      # --------------------------------------------------
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+
+      # --------------------------------------------------
+      # 4. Install project dependencies
+      # --------------------------------------------------
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
 
-      - name: Install Checkov
-        run: |
-          pip install checkov
 
-      - name: Run Checkov Terraform Scan
+      # --------------------------------------------------
+      # 5. Configure AWS credentials using GitHub OIDC
+      # --------------------------------------------------
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: us-east-1
+
+
+      # --------------------------------------------------
+      # 6. Verify AWS identity
+      # --------------------------------------------------
+
+      - name: Verify AWS identity
         run: |
-          checkov -d examples --framework terraform --soft-fail
-     
-      - name: AI Terraform Review
+          aws sts get-caller-identity
+
+
+      # --------------------------------------------------
+      # 7. Run AI Terraform Security Reviewer
+      #
+      # auditor.auditor performs:
+      #
+      # Terraform
+      #     ↓
+      # Checkov
+      #     ↓
+      # Checkov Parser
+      #     ↓
+      # Security Gate
+      #     ↓
+      # Amazon Bedrock Nova
+      #     ↓
+      # Security Report
+      #
+      # --------------------------------------------------
+
+      - name: AI Terraform Security Review
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AWS_REGION: us-east-1
         run: |
           python -m auditor.auditor examples/vulnerable.tf
