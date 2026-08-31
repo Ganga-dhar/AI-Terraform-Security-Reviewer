@@ -4,6 +4,6 @@
 # checkov
 
 boto3>=1.40.0
-botocore>=1.40.0
+botocore>=1.43.82
 checkov>=2.0.0
 langchain_aws
